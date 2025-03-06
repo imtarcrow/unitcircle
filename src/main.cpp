@@ -1,82 +1,14 @@
 #include <SDL3/SDL.h>
 
+#include "util.hpp"
+
 #include <iostream>
 
-#define WIDTH 800
-#define HEIGHT 800
+constexpr int WIDTH = 800;
+constexpr int HEIGHT = 800;
 
-constexpr float PI = 3.141592653589;
-constexpr int POINT_COUNT = 100;
-constexpr float LOWER_BOUND = -1;
-constexpr float UPPER_BOUND = 1;
-
-struct Vector2
-{
-    float x;
-    float y;
-};
-
-bool initializeSDL(SDL_Window **window, SDL_Renderer **renderer)
-{
-    if (!SDL_Init(SDL_INIT_VIDEO))
-    {
-        std::cout << "Could not initialize" << std::endl;
-        *window = nullptr;
-        *renderer = nullptr;
-        return false;
-    }
-
-    SDL_CreateWindowAndRenderer("Kreis", WIDTH, HEIGHT, NULL, window, renderer);
-
-    if (*window == NULL || *renderer == NULL)
-    {
-        std::cout << "Failed to create window or renderer via SDL! Code: " << SDL_GetError() << std::endl;
-        *window = nullptr;
-        *renderer = nullptr;
-        return false;
-    }
-
-    return true;
-}
-void uninitializeSDL(SDL_Window **window, SDL_Renderer **renderer)
-{
-    if (*renderer != nullptr)
-    {
-        SDL_DestroyRenderer(*renderer);
-        *renderer = nullptr;
-    }
-
-    if (*window != nullptr)
-    {
-        SDL_DestroyWindow(*window);
-        *window = nullptr;
-    }
-}
-
-struct Vector2 toScreenCoords(struct Vector2 vector, float lower_bound, float upper_bound)
-{
-    struct Vector2 newVector = {0};
-
-    newVector.x = (vector.x - lower_bound) * (WIDTH / (upper_bound - lower_bound));
-    newVector.y = HEIGHT - (vector.y - lower_bound) * (HEIGHT / (upper_bound - lower_bound));
-
-    return newVector;
-}
-
-struct Vector2 toBoundCoords(struct Vector2 vector, float lower_bound, float upper_bound)
-{
-    struct Vector2 newVector = {0};
-
-    newVector.x = vector.x * ((upper_bound - lower_bound) / WIDTH) + lower_bound;
-    newVector.y = vector.y * ((upper_bound - lower_bound) / HEIGHT) + lower_bound;
-
-    return newVector;
-}
-
-float toBoundCoordSingle(float coord, float lower_bound, float upper_bound)
-{
-    return coord * ((upper_bound - lower_bound) / WIDTH) + lower_bound;
-}
+constexpr int SAMPLES = 1000;
+constexpr float SCALING = 1.0f;
 
 float custom_sine(float v)
 {
@@ -91,8 +23,8 @@ float custom_sine(float v)
 float custom_cosine(float v)
 {
     float a = 1.0f;
-    float b = 2.0f;
-    float c = 1.0f;
+    float b = 1.1f;
+    float c = 0.0f;
     float d = 0.0f;
 
     return a * SDL_cosf(b * (v - c)) + d;
@@ -101,21 +33,21 @@ float custom_cosine(float v)
 SDL_FPoint *generatePoints()
 {
 
-    SDL_FPoint *points = static_cast<SDL_FPoint *>(calloc(POINT_COUNT + 1, sizeof(SDL_FPoint)));
+    SDL_FPoint *points = static_cast<SDL_FPoint *>(calloc(SAMPLES + 1, sizeof(SDL_FPoint)));
 
-    for (int i = 0; i < POINT_COUNT; i++)
+    for (int i = 0; i < SAMPLES; i++)
     {
 
-        float positionOnCircle = ((2 * PI) / POINT_COUNT) * i;
+        float positionOnCircle = ((2 * util::PI) / SAMPLES) * i;
 
         std::cout << positionOnCircle << std::endl;
 
-        struct Vector2 position;
+        struct util::Vector2 position;
 
         position.x = custom_cosine(positionOnCircle);
         position.y = custom_sine(positionOnCircle);
 
-        struct Vector2 screenspacePosition = toScreenCoords(position, LOWER_BOUND, UPPER_BOUND);
+        struct util::Vector2 screenspacePosition = util::boundToScreenspace(position, static_cast<float>(WIDTH), static_cast<float>(HEIGHT), SCALING);
 
         SDL_FPoint p = {
             screenspacePosition.x,
@@ -134,7 +66,7 @@ int main()
     SDL_Window *window;
     SDL_Renderer *renderer;
 
-    if (!initializeSDL(&window, &renderer))
+    if (!util::initializeSDL(&window, &renderer, WIDTH, HEIGHT))
     {
         return 1;
     }
@@ -164,11 +96,11 @@ int main()
         SDL_FPoint *points = generatePoints();
 
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, 0);
-        for (int i = 0; i < POINT_COUNT - 1; i++)
+        for (int i = 0; i < SAMPLES - 1; i++)
         {
             SDL_FPoint p = points[i];
             SDL_FPoint next_p;
-            if (i == POINT_COUNT - 1)
+            if (i == SAMPLES - 1)
             {
                 next_p = points[i + 1];
             }
@@ -186,7 +118,7 @@ int main()
         SDL_RenderPresent(renderer);
     }
 
-    uninitializeSDL(&window, &renderer);
+    util::uninitializeSDL(&window, &renderer);
 
     SDL_Quit();
     return 0;
