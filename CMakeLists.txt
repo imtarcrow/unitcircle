@@ -4,7 +4,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(proj)
 
-add_executable(proj "./src/main.cpp" "./src/util.cpp")
+file(GLOB SOURCES "./src/*.cpp")
+
+add_executable(proj ${SOURCES})
 
 target_include_directories(proj PUBLIC "./include")
 

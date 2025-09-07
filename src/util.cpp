@@ -1,9 +1,40 @@
 #include "util.hpp"
 
 #include <iostream>
+#include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_sdlrenderer3.h>
 
 namespace util
 {
+
+    bool initializeImGui(SDL_Window *window, SDL_Renderer *renderer)
+    {
+        ImGui::CreateContext();
+        ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+        ImGui_ImplSDLRenderer3_Init(renderer);
+
+        // After creating your window and renderer:
+        int pixelWidth, pixelHeight;
+        SDL_GetWindowSizeInPixels(window, &pixelWidth, &pixelHeight);
+
+        int windowWidth, windowHeight;
+        SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
+        float displayScale = SDL_GetWindowDisplayScale(window);
+
+        ImGuiIO &io = ImGui::GetIO();
+
+        // Set DisplaySize in pixels
+        io.DisplaySize = ImVec2((float)pixelWidth, (float)pixelHeight);
+
+        // Set the framebuffer scale (for HiDPI rendering)
+        io.DisplayFramebufferScale = ImVec2(displayScale, displayScale);
+
+        ImGui::GetStyle().ScaleAllSizes(0.8f);
+
+        return true;
+    }
 
     bool initializeSDL(SDL_Window **window, SDL_Renderer **renderer, int width, int height)
     {
