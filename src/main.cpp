@@ -184,6 +184,8 @@ int main()
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
 
+        HEIGHT / 2
+
         free(points);
     }
 
