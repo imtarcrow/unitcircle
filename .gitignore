@@ -3,6 +3,7 @@
 
 build/
 .vscode/
+imgui.ini
 
 ### C++ ###
 # Prerequisites
