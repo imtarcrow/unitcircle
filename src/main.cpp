@@ -1,18 +1,16 @@
-#include <SDL3/SDL.h>
-
-#include "util.hpp"
-
-#include <imgui.h>
-
 #include <iostream>
+
+#include <SDL3/SDL.h>
+#include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
-constexpr int WIDTH = 800;
-constexpr int HEIGHT = 800;
+
+#include "util.hpp"
+constexpr int WIDTH = 1200;
+constexpr int HEIGHT = 1200;
 
 float custom_sine(float v, struct util::Properties props)
 {
-
     return props.a * SDL_sinf(props.b * (v - props.c)) + props.d;
 }
 
@@ -21,14 +19,12 @@ float custom_cosine(float v, struct util::Properties props)
     return props.a * SDL_cosf(props.b * (v - props.c)) + props.d;
 }
 
-SDL_FPoint *generatePoints(int samples, float scaling, struct util::Properties sine_properties, struct util::Properties cosine_properties)
+SDL_FPoint* generatePoints(int samples, float scaling, struct util::Properties sine_properties,
+                           struct util::Properties cosine_properties)
 {
+    SDL_FPoint* points = static_cast<SDL_FPoint*>(malloc(sizeof(SDL_FPoint) * samples));
 
-    SDL_FPoint *points = static_cast<SDL_FPoint *>(malloc(sizeof(SDL_FPoint) * samples));
-
-    for (int i = 0; i < samples; i++)
-    {
-
+    for (int i = 0; i < samples; i++) {
         float positionOnCircle = ((2 * util::PI) / samples) * i;
 
         struct util::Vector2 position;
@@ -36,7 +32,8 @@ SDL_FPoint *generatePoints(int samples, float scaling, struct util::Properties s
         position.x = custom_cosine(positionOnCircle, cosine_properties);
         position.y = custom_sine(positionOnCircle, sine_properties);
 
-        struct util::Vector2 screenspacePosition = util::boundToScreenspace(position, static_cast<float>(WIDTH), static_cast<float>(HEIGHT), scaling);
+        struct util::Vector2 screenspacePosition =
+            util::boundToScreenspace(position, static_cast<float>(WIDTH), static_cast<float>(HEIGHT), scaling);
 
         SDL_FPoint p = {
             screenspacePosition.x,
@@ -51,7 +48,6 @@ SDL_FPoint *generatePoints(int samples, float scaling, struct util::Properties s
 
 int main()
 {
-
     bool connectLast = false;
     float scaling = 2.0f;
     int samples = 100;
@@ -73,31 +69,25 @@ int main()
     cosine_properties.c = 0.0f;
     cosine_properties.d = 0.0f;
 
-    SDL_Window *window;
-    SDL_Renderer *renderer;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
 
-    if (!util::initializeSDL(&window, &renderer, WIDTH, HEIGHT))
-    {
+    if (!util::initializeSDL(&window, &renderer, WIDTH, HEIGHT)) {
         return 1;
     }
 
-    if (!util::initializeImGui(window, renderer))
-    {
+    if (!util::initializeImGui(window, renderer)) {
         return 1;
     }
 
     bool running = true;
-    while (running)
-    {
-
+    while (running) {
         SDL_Event event;
 
-        while (SDL_PollEvent(&event))
-        {
+        while (SDL_PollEvent(&event)) {
             ImGui_ImplSDL3_ProcessEvent(&event);
 
-            if (event.type == SDL_EVENT_QUIT)
-            {
+            if (event.type == SDL_EVENT_QUIT) {
                 running = false;
             }
         }
@@ -109,33 +99,25 @@ int main()
         SDL_RenderLine(renderer, WIDTH / 2, 0, WIDTH / 2, HEIGHT);
         SDL_RenderLine(renderer, 0, HEIGHT / 2, WIDTH, HEIGHT / 2);
 
-        SDL_FPoint *points = generatePoints(samples, scaling, sine_properties, cosine_properties);
+        SDL_FPoint* points = generatePoints(samples, scaling, sine_properties, cosine_properties);
 
         SDL_SetRenderDrawColorFloat(renderer, functionColor[0], functionColor[1], functionColor[2], 0);
 
-        if (connectLast)
-        {
-            for (int i = 0; i < samples; i++)
-            {
+        if (connectLast) {
+            for (int i = 0; i < samples; i++) {
                 SDL_FPoint p = points[i];
                 SDL_FPoint np;
 
-                if (i == samples - 1)
-                {
+                if (i == samples - 1) {
                     np = points[0];
-                }
-                else
-                {
+                } else {
                     np = points[i + 1];
                 }
 
                 SDL_RenderLine(renderer, p.x, p.y, np.x, np.y);
             }
-        }
-        else
-        {
-            for (int i = 0; i < samples - 1; i++)
-            {
+        } else {
+            for (int i = 0; i < samples - 1; i++) {
                 SDL_FPoint p = points[i];
                 SDL_FPoint np = points[i + 1];
 
@@ -178,13 +160,10 @@ int main()
         ImGui::ColorPicker3("Punktfarbe", pointColor);
 
         ImGui::End();
-        // ImGui::ShowDemoWindow();
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
-
-        HEIGHT / 2
 
         free(points);
     }

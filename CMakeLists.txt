@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.31.3)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
+
 project(proj)
 
 file(GLOB SOURCES "./src/*.cpp")
